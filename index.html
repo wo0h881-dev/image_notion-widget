@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: sans-serif; padding: 20px; background: #fff; }
+        input { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
+        button { width: 100%; padding: 10px; background: #0582ff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <input type="text" id="pageUrl" placeholder="노션 페이지 주소를 넣으세요">
+    <input type="text" id="imgUrl" placeholder="이미지 주소를 넣으세요">
+    <button onclick="updateNotion()">이미지 강제 업데이트</button>
+    <p id="msg" style="font-size: 12px; color: #666;"></p>
+
+    <script>
+        async function updateNotion() {
+            const pageUrl = document.getElementById('pageUrl').value;
+            const imgUrl = document.getElementById('imgUrl').value;
+            const msg = document.getElementById('msg');
+            const GAS_URL = "여기에_구글_앱스_스크립트_배포_URL_입력";
+
+            msg.innerText = "처리 중...";
+
+            try {
+                // 앱스 스크립트로 데이터 전송
+                await fetch(GAS_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ pageUrl, imgUrl })
+                });
+                msg.innerText = "✅ 노션 확인해보세요!";
+            } catch(e) {
+                msg.innerText = "❌ 에러 발생: " + e;
+            }
+        }
+    </script>
+</body>
+</html>
