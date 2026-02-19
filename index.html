@@ -2,36 +2,56 @@
 <html>
 <head>
     <meta charset="UTF-8">
+    <title>Notion Image Automator</title>
     <style>
-        body { font-family: sans-serif; padding: 20px; background: #fff; }
-        input { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
-        button { width: 100%; padding: 10px; background: #0582ff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        body { font-family: sans-serif; padding: 30px; line-height: 1.6; max-width: 500px; margin: auto; }
+        .card { border: 1px solid #eee; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background: #000; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        #log { margin-top: 15px; font-size: 12px; color: #666; word-break: break-all; }
     </style>
 </head>
 <body>
-    <input type="text" id="pageUrl" placeholder="노션 페이지 주소를 넣으세요">
-    <input type="text" id="imgUrl" placeholder="이미지 주소를 넣으세요">
-    <button onclick="updateNotion()">이미지 강제 업데이트</button>
-    <p id="msg" style="font-size: 12px; color: #666;"></p>
+    <div class="card">
+        <h3>🚀 이미지 자동 변환 & 노션 전송</h3>
+        <input type="text" id="targetPage" placeholder="이미지를 넣을 노션 페이지 주소">
+        <input type="text" id="rawImg" placeholder="네이버/카카오 이미지 주소 붙여넣기">
+        
+        <button onclick="process()">변환 후 노션으로 전송</button>
+        
+        <div id="log"></div>
+    </div>
 
     <script>
-        async function updateNotion() {
-            const pageUrl = document.getElementById('pageUrl').value;
-            const imgUrl = document.getElementById('imgUrl').value;
-            const msg = document.getElementById('msg');
-            const GAS_URL = "여기에_구글_앱스_스크립트_배포_URL_입력";
+        async function process() {
+            const pageUrl = document.getElementById('targetPage').value;
+            const rawImg = document.getElementById('rawImg').value;
+            const log = document.getElementById('log');
+            const GAS_URL = "여기에_앱스_스크립트_배포_URL_입력";
 
-            msg.innerText = "처리 중...";
+            if(!pageUrl || !rawImg) return alert("두 주소 모두 입력해주세요!");
+
+            // 1. 페이지 ID 추출
+            const pageId = pageUrl.split("/").pop().split("?")[0].split("-").pop();
+            
+            // 2. 1차 변환: 노션 우회용 구글 프록시 주소 생성
+            const proxiedUrl = `https://images-opensocial.googleusercontent.com/gadgets/proxy?container=focus&refresh=604800&url=${encodeURIComponent(rawImg)}&.jpg`;
+
+            log.innerText = "⏳ 변환된 주소로 노션 업데이트 중...";
 
             try {
-                // 앱스 스크립트로 데이터 전송
-                await fetch(GAS_URL, {
+                // 3. 앱스 스크립트로 자동 전송
+                const res = await fetch(GAS_URL, {
                     method: 'POST',
-                    body: JSON.stringify({ pageUrl, imgUrl })
+                    body: JSON.stringify({ pageId, proxiedUrl })
                 });
-                msg.innerText = "✅ 노션 확인해보세요!";
-            } catch(e) {
-                msg.innerText = "❌ 에러 발생: " + e;
+                
+                if(res.ok) {
+                    log.innerHTML = `✅ 전송 성공!<br><b>변환 주소:</b> ${proxiedUrl}`;
+                    document.getElementById('rawImg').value = ""; // 입력창 비우기
+                }
+            } catch (e) {
+                log.innerText = "❌ 실패: " + e;
             }
         }
     </script>
